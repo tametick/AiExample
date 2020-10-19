@@ -23,6 +23,10 @@ public class EnemyController : MonoBehaviour {
     float sinceLastChange;
     float sinceLastDetection;
     bool inPursuit=false;
+
+    float lastSeen = 0;
+    public float memoryInSeconds= 3;
+
     void Update() {
         sinceLastChange -= Time.deltaTime;
         sinceLastDetection -= Time.deltaTime;
@@ -38,8 +42,13 @@ public class EnemyController : MonoBehaviour {
         if (sinceLastDetection <= 0) {
             sinceLastDetection = detectionInterval;
             if (Vector3.Distance(target.position, transform.position) <= detectionRange) {
+                lastSeen = Time.time;
                 inPursuit = true;
-            }
+            } else if (inPursuit) {
+                if(Time.time-lastSeen>=memoryInSeconds) {
+                    inPursuit = false;
+                }
+			}
         }
 
         if(inPursuit)
