@@ -23,7 +23,7 @@ public class EnemyController : MonoBehaviour {
     EnemyState state;
 
     void Start() {
-        state = EnemyState.Patrol;
+        state = PatrolOrRandomWalk();
         agent = GetComponent<NavMeshAgent>();
         sinceLastChange = 0;
         destination = transform.position;
@@ -37,6 +37,13 @@ public class EnemyController : MonoBehaviour {
 
     public List<Vector3> patrolPoints;
     Vector3? currentPatrolPoint = null;
+
+    EnemyState PatrolOrRandomWalk() {
+        if (Random.value < 0.5f)
+            return EnemyState.Patrol;
+        else
+            return EnemyState.RandomWalk;
+    }
 
     void Update() {
         sinceLastChange -= Time.deltaTime;
@@ -81,7 +88,7 @@ public class EnemyController : MonoBehaviour {
                 state = EnemyState.Pursuit;
             } else if (state==EnemyState.Pursuit) {
                 if(Time.time-lastSeen>=memoryInSeconds) {
-                    state = EnemyState.RandomWalk;
+                    state = PatrolOrRandomWalk();
                 }
 			}
         }
