@@ -38,6 +38,20 @@ public class EnemyController : MonoBehaviour {
     public List<Vector3> patrolPoints;
     Vector3? currentPatrolPoint = null;
 
+
+    bool InLineOfSight(Vector3 castTo) {
+        Vector3 direction = castTo - transform.position;
+        RaycastHit hit;
+        // Does the ray intersect any objects excluding the player layer
+        if (Physics.Raycast(transform.position, direction, out hit)) {
+            //Debug.DrawRay(transform.position, direction, Color.blue);
+            return hit.collider.transform == this.target;
+        } else {
+            //Debug.DrawRay(transform.position, direction, Color.red);
+            return false;
+        }
+    }
+
     EnemyState PatrolOrRandomWalk() {
         if (Random.value < 0.5f)
             return EnemyState.Patrol;
@@ -83,7 +97,9 @@ public class EnemyController : MonoBehaviour {
         // state change
         if (sinceLastDetection <= 0) {
             sinceLastDetection = detectionInterval;
-            if (Vector3.Distance(target.position, transform.position) <= detectionRange) {
+            if (Vector3.Distance(target.position, transform.position) <= detectionRange
+                && InLineOfSight(target.position)
+                ) {
                 lastSeen = Time.time;
                 state = EnemyState.Pursuit;
             } else if (state==EnemyState.Pursuit) {
