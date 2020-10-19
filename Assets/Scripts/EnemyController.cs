@@ -1,6 +1,12 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
 
+
+enum EnemyState {
+    RandomWalk,
+    Pursuit
+}
+
 public class EnemyController : MonoBehaviour {
     Camera cam;
     NavMeshAgent agent;
@@ -13,7 +19,10 @@ public class EnemyController : MonoBehaviour {
     public float detectionRange = 5;
     public float detectionInterval = .5f;
 
+    EnemyState state;
+
     void Start() {
+        state = EnemyState.RandomWalk;
         cam = Camera.main;
         agent = GetComponent<NavMeshAgent>();
         sinceLastChange = 0;
@@ -22,7 +31,6 @@ public class EnemyController : MonoBehaviour {
 
     float sinceLastChange;
     float sinceLastDetection;
-    bool inPursuit=false;
 
     float lastSeen = 0;
     public float memoryInSeconds= 3;
@@ -31,27 +39,34 @@ public class EnemyController : MonoBehaviour {
         sinceLastChange -= Time.deltaTime;
         sinceLastDetection -= Time.deltaTime;
 
-        if (!inPursuit && sinceLastChange <= 0) {
-            sinceLastChange = changeInterval;
+        // state action
+		switch (state) {
+            case EnemyState.RandomWalk:
+                if (sinceLastChange <= 0) {
+                    sinceLastChange = changeInterval;
 
-            destination= new Vector3(Random.Range(minBound.x, maxBound.x), Random.Range(minBound.y, maxBound.y), Random.Range(minBound.z, maxBound.z));
+                    destination = new Vector3(Random.Range(minBound.x, maxBound.x), Random.Range(minBound.y, maxBound.y), Random.Range(minBound.z, maxBound.z));
 
-            agent.SetDestination(destination);
-        }
+                    agent.SetDestination(destination);
+                }
+                break;
 
+            case EnemyState.Pursuit:
+                agent.SetDestination(target.position);
+                break;
+		}
+
+        // state change
         if (sinceLastDetection <= 0) {
             sinceLastDetection = detectionInterval;
             if (Vector3.Distance(target.position, transform.position) <= detectionRange) {
                 lastSeen = Time.time;
-                inPursuit = true;
-            } else if (inPursuit) {
+                state = EnemyState.Pursuit;
+            } else if (state==EnemyState.Pursuit) {
                 if(Time.time-lastSeen>=memoryInSeconds) {
-                    inPursuit = false;
+                    state = EnemyState.RandomWalk;
                 }
 			}
         }
-
-        if(inPursuit)
-            agent.SetDestination(target.position);
     }
 }
