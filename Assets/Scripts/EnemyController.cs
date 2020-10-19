@@ -1,14 +1,15 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.AI;
 
 
 enum EnemyState {
     RandomWalk,
-    Pursuit
+    Pursuit, 
+    Patrol
 }
 
 public class EnemyController : MonoBehaviour {
-    Camera cam;
     NavMeshAgent agent;
     public float changeInterval = 3;
     public Vector3 minBound = new Vector3(-10,1.25f,-10);
@@ -22,8 +23,7 @@ public class EnemyController : MonoBehaviour {
     EnemyState state;
 
     void Start() {
-        state = EnemyState.RandomWalk;
-        cam = Camera.main;
+        state = EnemyState.Patrol;
         agent = GetComponent<NavMeshAgent>();
         sinceLastChange = 0;
         destination = transform.position;
@@ -34,6 +34,9 @@ public class EnemyController : MonoBehaviour {
 
     float lastSeen = 0;
     public float memoryInSeconds= 3;
+
+    public List<Vector3> patrolPoints;
+    Vector3? currentPatrolPoint = null;
 
     void Update() {
         sinceLastChange -= Time.deltaTime;
@@ -53,6 +56,20 @@ public class EnemyController : MonoBehaviour {
 
             case EnemyState.Pursuit:
                 agent.SetDestination(target.position);
+                break;
+
+            case EnemyState.Patrol:
+                if(currentPatrolPoint == null) {
+                    currentPatrolPoint = patrolPoints[Random.Range(0, patrolPoints.Count)];
+                }
+
+                if(Vector3.Distance(transform.position, (Vector3)currentPatrolPoint) <= 0.1f) {
+                    int currIndex = patrolPoints.IndexOf((Vector3)currentPatrolPoint);
+                    int nextIndex = (currIndex + 1) % patrolPoints.Count;
+                    currentPatrolPoint = patrolPoints[nextIndex];
+                }
+                agent.SetDestination((Vector3)currentPatrolPoint);
+
                 break;
 		}
 
