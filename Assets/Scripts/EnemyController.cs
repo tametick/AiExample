@@ -22,6 +22,8 @@ public class EnemyController : MonoBehaviour {
 
     EnemyState state;
 
+    internal List<EnemyController> enemies { private get; set; }
+
     void Start() {
         state = PatrolOrRandomWalk();
         agent = GetComponent<NavMeshAgent>();
@@ -100,13 +102,19 @@ public class EnemyController : MonoBehaviour {
             if (Vector3.Distance(target.position, transform.position) <= detectionRange
                 && InLineOfSight(target.position)
                 ) {
-                lastSeen = Time.time;
-                state = EnemyState.Pursuit;
-            } else if (state==EnemyState.Pursuit) {
+                foreach (var e in enemies) {
+					e.StartPursuit();
+				}
+			} else if (state==EnemyState.Pursuit) {
                 if(Time.time-lastSeen>=memoryInSeconds) {
                     state = PatrolOrRandomWalk();
                 }
 			}
         }
     }
+
+	private void StartPursuit() {
+		lastSeen = Time.time;
+		state = EnemyState.Pursuit;
+	}
 }
